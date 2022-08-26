@@ -1,84 +1,93 @@
-#include <stdio.h>
-
-#define N 25
-#define STRLEN 60
-
-#define RC4LEN 256
-
-void EncryptRC4(char*, int, char*, unsigned char*, int);
-
-int main() 
-{
-    unsigned char key[N] = {25, 44, 26, 39, 45, 
-                            41, 96, 127, 244, 2,
-                            183, 231, 92, 58, 41,
-                            82, 79, 13, 43, 213,
-                            99, 252, 32, 77, 46};
-                      
-    char plainText[STRLEN];
-    char cypherText[STRLEN];
-    char decryptText[STRLEN];
-    
-    scanf("%s", plainText);
-    EncryptRC4(plainText, STRLEN, cypherText, key, N);
-    printf("%s\n", cypherText);
-    EncryptRC4(cypherText, STRLEN, decryptText, key, N);
-    printf("%s\n", decryptText);
-    
-    return 0;
-}
-
+#include <stdlib.h>
+#include "encrypt.h"
+#include "mStdLibs/mMath.h"
 
 /* 
-** Summary EncryptRC4
+** Summary InitRC4
 **
-** Description: Encrypt a variable length string using the RC4 algorithm with a given key
+** Description: Initialize RC4State with a given key 
+**
+** Parameters:
+**   char* key: the pointer to the string that contains the key
+**   int keyLength: length of the key
+**
+** Output: Returns the RC4State struct initialized with the given key
+*/ 
+RC4State InitRC4(unsigned char* key, int keyLength)
+{
+    RC4State result;
+
+    for (result.i = 0; result.i < RC4LEN; result.i++)
+    {
+        result.S[result.i] = result.i;
+        result.K[result.i] = key[result.i % keyLength];
+    }
+    
+    for (result.i = 0; result.i < RC4LEN; result.i++)
+    {
+        result.j = (result.i + result.S[result.i] + result.K[result.i]) % RC4LEN;
+        Swapuc(&result.S[result.i], &result.S[result.j]);
+    }
+    
+    result.i = 0; result.j = 0;
+
+    return result;
+}
+// End of InitRC4 function definition
+
+/* 
+** Summary EncryptRC4String
+**
+** Description: Encrypt a variable length string using the RC4 algorithm with a given RC4State
 **
 ** Parameters:
 **   char* text: the pointer to the string that is to be encrypted
 **   int length: the length of the text to be encrypted
-**   char* cypherText: the pointer where the output encrypted/decrypted string will be stored
-**                     allocate memory to cypherText before calling this function
-**   unsigned char* key: pointer to where the key is stored
-**   int keyLength: length of the key [1..256]
+**   RC4State rc4state: RC4State structure to use for encryption
 **
-** Output: Stores the encrypted/decrypted string where cypherText points
-*/
-void EncryptRC4(char* text, int length, char* cypherText, unsigned char* key, int keyLength)
+** Output: Returns a pointer to where the encrypted string is stored
+*/ 
+char* EncryptRC4String(char* text, int length, RC4State rc4state)
 {
-    int i, j, iter;
-    char tempChar = 0;
-    char keyStreamByte = 0;
-    unsigned char S[RC4LEN], K[RC4LEN];
+    int iter;
+    char *cypherText;
     
-    for (i = 0; i < RC4LEN; i++)
-    {
-        S[i] = i;
-        K[i] = key[i % keyLength];
-    }
-    
-    for (i = 0; i < RC4LEN; i++)
-    {
-        j = (i + S[i] + K[i]) % RC4LEN;
-        
-        tempChar = S[i];
-        S[i] = S[j];
-        S[j] = tempChar;
-    }
-    
-    i = 0; j = 0;
+    cypherText = (char*)malloc(sizeof(char) * (length + 1));
+
+    if (cypherText == NULL)
+        return NULL;
     
     for (iter = 0; iter < length; iter++)
-    {
-        i = (i + 1) % RC4LEN;
-        j = (j + S[i]) % RC4LEN;
-        
-        tempChar = S[i];
-        S[i] = S[j];
-        S[j] = tempChar;
-        
-        keyStreamByte = S[(S[i] + S[j]) % RC4LEN];
-        cypherText[iter] = text[iter] ^ keyStreamByte;
-    }
+        cypherText[iter] = EncryptRC4Byte(text[iter], rc4state);
     cypherText[iter] = 0;
+
+    return cypherText;
 }
+// End of EncodeRC4String function definition
+
+/* 
+** Summary EncryptRC4Byte
+**
+** Description: Encrypt a simple character using the RC4 algorithm with a given RC4State
+**
+** Parameters:
+**   char text: the character that will be encrypted
+**   RC4State rc4state: RC4State structure to use for encryption
+**
+** Output: Returns the encrypted character
+*/ 
+char EncryptRC4Byte(char text, RC4State rc4state)
+{
+    char keyStreamByte, result;
+
+    rc4state.i = (rc4state.i + 1) % RC4LEN;
+    rc4state.j = (rc4state.j + rc4state.S[rc4state.i]) % RC4LEN;
+        
+    Swapuc(&rc4state.S[rc4state.i], &rc4state.S[rc4state.j]);
+
+    keyStreamByte = rc4state.S[(rc4state.S[rc4state.i] + rc4state.S[rc4state.j]) % RC4LEN];
+    result = text ^ keyStreamByte;
+
+    return result;
+}
+// End of EncodeRC4Byte function definition
