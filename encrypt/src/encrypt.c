@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "encrypt.h"
-#include "mStdLibs/mMath.h"
+#include "mStdLibs.h"
 
 /* 
 ** Summary InitRC4

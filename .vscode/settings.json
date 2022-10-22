@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "encrypt.h": "c",
+        "stdlib.h": "c",
+        "mmath.h": "c",
+        "mstdlibs.h": "c",
+        "stdio.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "Disabled"
+}

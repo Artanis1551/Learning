@@ -1,4 +1,5 @@
-#include "mMath.h"
+#include <stdio.h>
+#include "mStdLibs.h"
 
 void Swapi(int* x, int* y)
 {

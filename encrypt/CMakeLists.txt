@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.12)
+project(encrypt)
+add_subdirectory(../mStdLibs ./mStdLibs) 
+link_libraries(mStdLibs)
+include_directories("${PROJECT_SOURCE_DIR}/../mStdLibs/include")
+include_directories(include)
+add_library(encrypt src/encrypt.c)
